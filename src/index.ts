@@ -10,7 +10,7 @@ function _parseInt(value:number) {
 }
 
 var canvas: HTMLCanvasElement
-const width = Number(window.innerWidth)
+const width = Number(window.innerWidth) - 300
 const height = Number(window.innerHeight)
 
 var units = [];
@@ -70,6 +70,7 @@ function getMousePos(canvas: HTMLCanvasElement, evt: MouseEvent) {
 }
 
 window.onload = () => {
+    const starInfo = document.getElementById('star-info');
     canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
@@ -101,36 +102,44 @@ window.onload = () => {
     ])
     console.log(suns)
 
+    let target_sun : Star;
+
+    canvas.addEventListener("click", function (evt) {
+        var mousePos = getMousePos(canvas, evt);
+        console.log('mousemove', mousePos)
+        let my : number = (sun.y - mousePos.y)
+        let mx : number = (sun.x - mousePos.x)
+
+        const dist =  Math.sqrt(Math.pow(mx, 2) + Math.pow(my, 2))
+        const zeta =  Math.atan2(my, mx) * 180 / Math.PI;
+
+        const G = 6.674 * Math.pow(10, 11 * -1)
+        const foce = G * (sun.m * Math.pow(10, 5)) / Math.pow(dist, 2) 
+
+        const vy = Math.sin(zeta) * foce
+        const vx = Math.cos(zeta) * foce
+
+        console.log({
+            my,
+            vy,
+            mx,
+            vx,
+            // dist,
+            zeta,
+        })
+
+        target_sun = suns.filter(s => mousePos.x >= s.x && mousePos.x <=  s.x + s.radius && mousePos.y >= s.y &&  mousePos.y <= s.y + s.radius)[0]
+        console.log('target_sun', target_sun)
+    }, false);
+
+   
+
     const render = () => {
+        
         const canvas_2d = canvas.getContext("2d");
         if (canvas_2d) {
             canvas_2d.clearRect(0, 0, canvas.width, canvas.height);
         }
-
-        canvas.addEventListener("click", function (evt) {
-            var mousePos = getMousePos(canvas, evt);
-            console.log('mousemove', mousePos)
-            let y = (sun.y - mousePos.y)
-            let x =  (sun.x - mousePos.x)
-
-            const dist =  Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
-            const zeta =  Math.atan2(y, x) * 180 / Math.PI;
-
-            const G = 6.674 * Math.pow(10, 11 * -1)
-            const foce = G * (sun.m * Math.pow(10, 5)) / Math.pow(dist, 2) 
-
-            const vy = Math.sin(zeta) * foce
-            const vx = Math.cos(zeta) * foce
-
-            console.log({
-                y,
-                vy,
-                x,
-                vx,
-                // dist,
-                zeta,
-            })
-        }, false);
 
         // if (sun.x == 100 || sun.x == width - 100) {
         //     sun.speedX *= -1
@@ -162,18 +171,47 @@ window.onload = () => {
                 const vx = Math.cos(zeta) * foce
 
                 const pow = Math.pow(10, 4)
+                const c =  Math.sqrt(Math.pow(asun.speedX, 2) + (Math.pow(asun.speedY, 2)))
                 // asun.speedX += vx * pow / asun.m 
                 // asun.speedY += vy * pow / asun.m
                 if (asun.m < xsun.m) {
                     asun.speedX += vx 
                     asun.speedY += vy 
-                    // c =  Math.sqrt(Math.pow(asun.speedX, 2) + (Math.pow(asun.speedY, 2)))
                 } else {
                     xsun.speedX += vx 
                     xsun.speedY += vy 
                 }
             })
         })
+
+        if (target_sun) {
+            starInfo.innerHTML = ''
+            
+            let px = document.createElement('p') 
+            px.innerText = 'speedX: ' + target_sun.speedX.toString()
+            starInfo.appendChild(px);
+
+            let py = document.createElement('p') 
+            py.innerText = 'speedY: ' + target_sun.speedY.toString()
+            starInfo.appendChild(py);
+
+            const zeta =  Math.atan2(target_sun.speedY, target_sun.speedX) * 180 / Math.PI;
+            let pzeta = document.createElement('p') 
+            pzeta.innerText = 'zeta: ' + zeta.toString()
+            starInfo.appendChild(pzeta);
+
+            const ctx : CanvasRenderingContext2D | any = canvas.getContext("2d");
+            const magin = 2
+            ctx.beginPath();
+            ctx.rect(target_sun.x - target_sun.radius - magin, target_sun.y -  target_sun.radius - magin, target_sun.radius * 2 + magin * 2, target_sun.radius * 2 + magin * 2);
+            ctx.strokeStyle = "yellow";
+            
+            ctx.lineCap = "round";
+            ctx.moveTo(target_sun.x, target_sun.y);
+            ctx.lineTo(target_sun.x + (target_sun.speedX * 100), target_sun.y + (target_sun.speedY * 100));
+            
+            ctx.stroke();
+        }
         
         suns.forEach(asun => {
             asun.newPos();

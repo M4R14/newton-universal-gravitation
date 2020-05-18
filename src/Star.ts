@@ -19,12 +19,18 @@ export default class Star {
         this.y += this.speedY;
     }
     update(canvas: HTMLCanvasElement): void {
+        const zeta =  Math.atan2(this.speedY, this.speedX) * 180 / Math.PI;
         const ctx : CanvasRenderingContext2D | any = canvas.getContext("2d");
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.fillStyle = this.color;
+        ctx.strokeStyle = this.color;
         ctx.fill();
         ctx.fillText(`${Math.log10(this.m)}`, this.x + this.radius, this.y + this.radius);
         // ctx.stroke();
+        ctx.lineCap = "round";
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + (Math.cos(zeta) * (this.radius + 8)), this.y + (Math.sin(zeta) * (this.radius + 8)));
+        ctx.stroke();
     }
 }
