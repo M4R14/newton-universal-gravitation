@@ -8,21 +8,30 @@
     <style>
         body {
             margin: 0;
+            background-color: black;
         }
+
         .main {
             display: flex;
             width: fit-content;
         }
-        .main canvas {
-            width: 33.33%;
+        
+
+        @media only screen and (max-width: 768px) {
+            /* For mobile phones: */
+            .main {
+                display: block;
+                width: fit-content;
+            }
         }
+        
     </style>
 </head>
 <body>
     <div class="main">
-        <canvas id="app-1" ></canvas>
-        <canvas id="app-2" ></canvas>
         <canvas id="app-3" ></canvas>
+        <canvas id="app-2" ></canvas>
+        <canvas id="app-1" ></canvas>
     </div>
 
     <script>
@@ -67,14 +76,15 @@
             const canvas = document.getElementById(id)
             canvas.width = width
             canvas.height = height
-            canvas.style.backgroundColor = "black"
 
             const mouse_pos = new MousePos(canvas.width / 2, canvas.height / 2);
 
             canvas.addEventListener('mousemove', (event) => {
                 var rect = canvas.getBoundingClientRect();
-                mouse_pos.mx = event.clientX - rect.left;
-                mouse_pos.my = event.clientY - rect.top;
+                setTimeout(() => {
+                    mouse_pos.mx = event.clientX - rect.left;
+                    mouse_pos.my = event.clientY - rect.top;
+                }, 500)
             })
 
             canvas.addEventListener('mouseenter', (event) => {
@@ -161,11 +171,17 @@
         }
 
         window.onload = () => {
-            const width  = window.innerWidth / 3
-            const height  = window.innerHeight
-            createCluster('app-1', width, height, 20);
-            createCluster('app-2', width, height, 100);
+            let width  = window.innerWidth
+            let height  = window.innerWidth
+
+            if (window.innerWidth >= 768) {
+                width  = window.innerWidth / 3
+                height  = window.innerHeight
+            }
+           
             createCluster('app-3', width, height, 500);
+            createCluster('app-2', width, height, 100);
+            createCluster('app-1', width, height, 20);
         }
     </script>
 </body>
