@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cluster</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="app" ></canvas>
+    <script>
+        class Star {
+            color = '#fff'
+            constructor (x, y, r, zeta, speed, color) {
+                this.x = x
+                this.y = y
+                this.r = r
+                this._zeta = zeta
+                this.speed = speed
+                this.color = color
+                this.vx = Math.sin(zeta) * speed 
+                this.vy = Math.cos(zeta) * speed 
+            }
+
+            get zeta () { return this._zeta; }
+
+            set zeta (value) {
+                this._zeta = value
+                this.vx = Math.sin(value) * this.speed 
+                this.vy = Math.cos(value) * this.speed 
+            }
+
+            move() {
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+        }
+
+        class MousePos {
+            active = false
+            constructor (x, y) {
+                this.x = x
+                this.y = y
+                this.mx = 0
+                this.my = 0
+            }
+        }
+
+        window.onload = () => {
+            const canvas = document.getElementById('app')
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            canvas.style.backgroundColor = "black"
+
+            const mouse_pos = new MousePos(canvas.width / 2, canvas.height / 2);
+
+            canvas.addEventListener('mousemove', (event) => {
+                var rect = canvas.getBoundingClientRect();
+                mouse_pos.mx = event.clientX - rect.left;
+                mouse_pos.my = event.clientY - rect.top;
+            })
+
+            canvas.addEventListener('mouseenter', (event) => {
+                console.log(mouse_pos);
+                mouse_pos.active = true
+            })
+
+            canvas.addEventListener('mouseleave', (event) => {
+                mouse_pos.active = false
+            })
+
+            var Frame = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                r: canvas.width / 3
+            }
+
+            var stars = []
+
+            // 50, 100, 300
+            for (let index = 0; index < 50; index++) {
+                const r = [ 0.5, 1, 2][parseInt(Math.random() * 3)]
+                const zeta = parseFloat(Math.random() * 360)
+                const color = [ 'red', '#fff' ][parseInt(Math.random() * 2)]
+                const speed = parseInt(1 + Math.random() * (100 - 1)) / 100
+
+                // const r2 = 25
+                var angle = Math.random() * Math.PI * 2;
+                var inCricle = parseInt(Math.random()* Frame.r);
+                const x = parseInt(Math.cos(angle) * inCricle) + Frame.x
+                const y = parseInt(Math.sin(angle) * inCricle) + Frame.y
+
+                stars.push(new Star(x, y, r, zeta, speed, color))
+            }
+
+            const renderFrame = () =>{
+                const ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                ctx.clearRect(0, 0, Frame.x, Frame.y);
+                ctx.beginPath();
+                ctx.arc(Frame.x, Frame.y, Frame.r, 0, 2 * Math.PI);
+                // ctx.fillStyle = "red";
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            const renderStar = (star) => {
+                const ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                ctx.fillStyle = star.color;
+                ctx.arc(star.x, star.y, star.r, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            stars.forEach(renderStar)
+
+            const render = () => {
+                const canvas_2d = canvas.getContext("2d");
+                canvas_2d.clearRect(0, 0, canvas.width, canvas.height);
+
+                stars.forEach(star =>  {
+                    if (mouse_pos.active) {
+                        const dist_o = Math.sqrt(Math.pow((Frame.x - mouse_pos.mx), 2) + Math.pow((Frame.y - mouse_pos.my), 2))
+                        const dist = Math.sqrt(Math.pow((star.x - mouse_pos.mx), 2) + Math.pow((Frame.y - mouse_pos.my), 2))
+                        const n_zeta = Math.atan2((star.x - mouse_pos.mx), (star.y - mouse_pos.my)) * 180 / Math.PI;
+                        if (dist_o <= Frame.r) {
+                            star.zeta = n_zeta 
+                        }
+                    }
+                    star.move()
+                    const dist = Math.sqrt(Math.pow((star.x - Frame.x), 2) + Math.pow((Frame.y - star.y), 2))
+                    if (dist >= Frame.r) {
+                        star.zeta += 180
+                        star.zeta *= Math.PI * 2
+                    }
+
+                    renderStar(star)
+                })
+                
+                requestAnimationFrame(render)
+            }
+
+            render()
+        }
+    </script>
+</body>
+</html>
